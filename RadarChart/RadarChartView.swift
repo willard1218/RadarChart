@@ -18,43 +18,33 @@ class RadarChartView: UIView {
     @IBInspectable var vertexCircleRadius: CGFloat = 3
     @IBInspectable var separatorLineColor: UIColor = .white
     
-    let padding : CGFloat = 30
-    var ratios : [Double]! { // 0~1
+    var vertexTitles : [NSAttributedString]?
+    var vertexOffsets : [CGPoint]?
+    
+    var padding : CGFloat = 30
+    var ratios : [Double]? { // 0~1
         didSet {
-            radiuss = ratios.map{$0 * self.edgeLength}
+            radiuss = ratios!.map{$0 * self.edgeLength}
         }
     }
-    var radiuss : [Double]! {
-        didSet {
-            setRadiuss(radiuss)
-        }
-    }
+    var radiuss : [Double]?
     
     var edgeLength : Double {
         get { return Double(frame.height / 2 - padding) }
     }
     
     var vertexPoints : [CGPoint]!
-    
+
     override func draw(_ rect: CGRect) {
-        ratios = [0.3, 0.5, 0.2, 0.1, 1]
+        if radiuss == nil {
+            return
+        }
         
-        // example for add titles
-        let texts = ["態度", "效率", "責任", "合作", "應變"]
-        let attr = [NSAttributedStringKey.foregroundColor : UIColor.brown,
-                    NSAttributedStringKey.font : UIFont.systemFont(ofSize: 15)
-        ]
+        setRadiuss(radiuss!)
         
-        let attrs = texts.map{NSAttributedString(string: $0, attributes: attr)}
-        
-        
-        let offsets = [CGPoint(x:-15, y:-20),
-                       CGPoint(x:5, y:-10),
-                       CGPoint(x:-5, y:5),
-                       CGPoint(x:-5, y:5),
-                       CGPoint(x:-35, y:-10)]
-        
-        drawVertexTitles(attrStrings: attrs, offsets: offsets)
+        if let attrs = vertexTitles, let offsets = vertexOffsets {
+            drawVertexTitles(attrStrings: attrs, offsets: offsets)
+        }
     }
     
     
@@ -70,7 +60,7 @@ class RadarChartView: UIView {
         drawArea(withPoints: vertexPoints, color: bgColor)
         drawCircles(withPoints: vertexPoints, color: circleColor)
         
-        let areaPoints = self.points(origin: origin, radiuss: radiuss)
+        let areaPoints = self.points(origin: origin, radiuss: radiuss!)
         
         drawArea(withPoints: areaPoints, color: areaColor)
         
@@ -146,6 +136,7 @@ class RadarChartView: UIView {
             attr.draw(at: vertexPoints[i].plus(offset))
         }
     }
+  
 }
 
 extension UIBezierPath {
@@ -175,8 +166,8 @@ extension CGFloat : RepeatsAble {}
 extension CGPoint {
     
     func roate(degree : Double, atOrigin origin: CGPoint) -> CGPoint {
-        let sinV = sin(degrees: degree)
-        let cosV = cos(degrees: degree)
+        let sinV = __sinpi(degree/180.0)
+        let cosV = __cospi(degree/180.0)
       
         let x2 = (cosV * Double(x) - sinV * Double(y)) + Double(origin.x)
         let y2 = (sinV * Double(x) + cosV * Double(y)) + Double(origin.y)
@@ -190,13 +181,4 @@ extension CGPoint {
         self.y += point.y
         return self
     }
-}
-
-
-func sin(degrees: Double) -> Double {
-    return __sinpi(degrees/180.0)
-}
-
-func cos(degrees: Double) -> Double {
-    return __cospi(degrees/180.0)
 }
